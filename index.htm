@@ -5,15 +5,18 @@
 <script>
 var dist = (x1, y1, x2, y2) => Math.sqrt(Math.pow((x1 - x2), 2) - Math.pow((y1 - y2), 2));
 
-var gravAcc = -30;
-var interval = 10;
-var fixedX = 350, fixedY = -25;
-var mobileX = 600, mobileY = -25;
-var mobileNgVelocity = 0;
-var mobileTangVelocity = 0;
-var alpha = 0;
+var gravAcc = -25;
+var interval = 5;
+var pends = [[400, -25], [450, -25], [600, -25], [750, -100]]
+var mobileNgVelocity = [];
+var mobileTangVelocity = [];
+var alpha = [];
 
-var circleRadius = dist(fixedX, fixedY, mobileX, mobileY);
+var circleRadius = [];
+for (var i = 1; i < pends.length; ++i) {
+	circleRadius.push(dist(pends[i - 1][0], pends[i - 1][1], pends[i][0], pends[i][1]))
+	alpha.push(0);mobileNgVelocity.push(0);mobileTangVelocity.push(0);
+}
 
 function render() {
 
@@ -21,31 +24,34 @@ function render() {
     // Render fixed point
     ctx.beginPath();
     ctx.fillStyle = "black";
-    ctx.arc(fixedX, -fixedY, 10, 0, 2*Math.PI);
+    ctx.arc(pends[0][0], -pends[0][1], 10, 0, 2*Math.PI);
     ctx.stroke();
     ctx.fill();
+	for (var i = 1; i < pends.length; ++i) {
+		ctx.moveTo(pends[i - 1][0], -pends[i - 1][1]);
+		ctx.lineTo(pends[i][0], -pends[i][1]);
+		ctx.stroke();
 
-    ctx.moveTo(fixedX, -fixedY);
-    ctx.lineTo(mobileX, -mobileY);
-    ctx.stroke();
-
-    ctx.arc(mobileX, -mobileY, 5, 0, 2*Math.PI);
-    ctx.fillStyle = 'black';
-    ctx.fill();
+		ctx.arc(pends[i][0], -pends[i][1], 5, 0, 2*Math.PI);
+		ctx.fillStyle = 'black';
+		ctx.fill();
+	}
 
 }
 
 function move() {
     render();
-    var tangAcc = gravAcc * Math.cos(alpha);
-    mobileTangVelocity += interval / 1000 * tangAcc;
-    mobileNgVelocity = mobileTangVelocity / circleRadius;
+	for (var i = 1; i < pends.length; ++i) {
+		var tangAcc = gravAcc * Math.cos(alpha[i - 1]);
+		mobileTangVelocity[i - 1] += interval / 1000 * tangAcc;
+		mobileNgVelocity[i - 1] = mobileTangVelocity[i - 1] / circleRadius[i - 1];
 
-    mobileX = fixedX + circleRadius * Math.cos(mobileNgVelocity + alpha);
-    mobileY = fixedY + circleRadius * Math.sin(mobileNgVelocity + alpha);
-	alpha += mobileNgVelocity;
-	// FRICTION
-	mobileTangVelocity /= 1.001;
+		pends[i][0] = pends[i - 1][0] + circleRadius[i - 1] * Math.cos(mobileNgVelocity[i - 1] + alpha[i - 1]);
+		pends[i][1] = pends[i - 1][1] + circleRadius[i - 1] * Math.sin(mobileNgVelocity[i - 1] + alpha[i - 1]);
+		alpha[i - 1] += mobileNgVelocity[i - 1];
+		// FRICTION
+		mobileTangVelocity[i - 1] /= 1.001;
+	}
 }
 
 function domLoaded() {
@@ -59,7 +65,7 @@ function domLoaded() {
 
 </head>
 <body>
-    <canvas id="pendulum" width="700px" height="500px" style="border:solid thin">
+    <canvas id="pendulum" width="900px" height="600px" style="border:solid thin">
     </canvas>
 </body>
 
