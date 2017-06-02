@@ -1,0 +1,69 @@
+<html>
+
+<head>
+
+<script>
+var dist = (x1, y1, x2, y2) => Math.sqrt(Math.pow((x1 - x2), 2) - Math.pow((y1 - y2), 2));
+
+var gravAcc = -30;
+var interval = 10;
+var fixedX = 350, fixedY = -25;
+var mobileX = 600, mobileY = -25;
+var mobileNgVelocity = 0;
+var mobileTangVelocity = 0;
+var alpha = 0;
+
+var circleRadius = dist(fixedX, fixedY, mobileX, mobileY);
+
+function render() {
+
+    ctx.clearRect(0, 0, canv.width, canv.height);
+    // Render fixed point
+    ctx.beginPath();
+    ctx.fillStyle = "black";
+    ctx.arc(fixedX, -fixedY, 10, 0, 2*Math.PI);
+    ctx.stroke();
+    ctx.fill();
+
+    ctx.moveTo(fixedX, -fixedY);
+    ctx.lineTo(mobileX, -mobileY);
+    ctx.stroke();
+
+    ctx.arc(mobileX, -mobileY, 5, 0, 2*Math.PI);
+    ctx.fillStyle = 'black';
+    ctx.fill();
+
+}
+
+function move() {
+    render();
+    var tangAcc = gravAcc * Math.cos(alpha);
+    mobileTangVelocity += interval / 1000 * tangAcc;
+    mobileNgVelocity = mobileTangVelocity / circleRadius;
+
+    mobileX = fixedX + circleRadius * Math.cos(mobileNgVelocity + alpha);
+    mobileY = fixedY + circleRadius * Math.sin(mobileNgVelocity + alpha);
+	alpha += mobileNgVelocity;
+	// FRICTION
+	mobileTangVelocity /= 1.001;
+}
+
+function domLoaded() {
+    canv = document.getElementById("pendulum");
+    ctx = canv.getContext("2d");
+    
+
+    setInterval(move, interval);
+}
+</script>
+
+</head>
+<body>
+    <canvas id="pendulum" width="700px" height="500px" style="border:solid thin">
+    </canvas>
+</body>
+
+<script>
+domLoaded();
+</script>
+</html>
