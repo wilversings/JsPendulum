@@ -3,20 +3,24 @@
 <head>
 
 <script>
-var dist = (x1, y1, x2, y2) => Math.sqrt(Math.pow((x1 - x2), 2) - Math.pow((y1 - y2), 2));
+Array.prototype.trail = function(fnc) {
+	for (var i = 1; i < this.length; ++i)
+		fnc(this[i - 1], this[i], i - 1);
+}
+var dist = (a, b) => Math.sqrt(Math.pow((a.x - b.x), 2) - Math.pow((a.y - b.y), 2));
 
 var gravAcc = -25;
 var interval = 5;
-var pends = [[400, -25], [450, -25], [600, -25], [750, -100]]
+var pends = [{x:350,y:-50}, {x:500,y:-50}, {x:600,y:-25}, {x:500,y:-100}]
 var mobileNgVelocity = [];
 var mobileTangVelocity = [];
 var alpha = [];
 
 var circleRadius = [];
-for (var i = 1; i < pends.length; ++i) {
-	circleRadius.push(dist(pends[i - 1][0], pends[i - 1][1], pends[i][0], pends[i][1]))
+pends.trail(function(trail, current) {
+	circleRadius.push(dist(trail, current))
 	alpha.push(0);mobileNgVelocity.push(0);mobileTangVelocity.push(0);
-}
+})
 
 function render() {
 
@@ -24,19 +28,18 @@ function render() {
     // Render fixed point
     ctx.beginPath();
     ctx.fillStyle = "black";
-    ctx.arc(pends[0][0], -pends[0][1], 10, 0, 2*Math.PI);
+    ctx.arc(pends[0].x, -pends[0].y, 10, 0, 2*Math.PI);
     ctx.stroke();
     ctx.fill();
-	for (var i = 1; i < pends.length; ++i) {
-		ctx.moveTo(pends[i - 1][0], -pends[i - 1][1]);
-		ctx.lineTo(pends[i][0], -pends[i][1]);
+	
+	pends.trail(function(trail, current) {
+		ctx.moveTo(trail.x, -trail.y);
+		ctx.lineTo(current.x, -current.y);
 		ctx.stroke();
 
-		ctx.arc(pends[i][0], -pends[i][1], 5, 0, 2*Math.PI);
-		ctx.fillStyle = 'black';
+		ctx.arc(current.x, -current.y, 5, 0, 2*Math.PI);
 		ctx.fill();
-	}
-
+	});
 }
 
 function move() {
@@ -46,18 +49,17 @@ function move() {
 		mobileTangVelocity[i - 1] += interval / 1000 * tangAcc;
 		mobileNgVelocity[i - 1] = mobileTangVelocity[i - 1] / circleRadius[i - 1];
 
-		pends[i][0] = pends[i - 1][0] + circleRadius[i - 1] * Math.cos(mobileNgVelocity[i - 1] + alpha[i - 1]);
-		pends[i][1] = pends[i - 1][1] + circleRadius[i - 1] * Math.sin(mobileNgVelocity[i - 1] + alpha[i - 1]);
+		pends[i].x = pends[i - 1].x + circleRadius[i - 1] * Math.cos(mobileNgVelocity[i - 1] + alpha[i - 1]);
+		pends[i].y = pends[i - 1].y + circleRadius[i - 1] * Math.sin(mobileNgVelocity[i - 1] + alpha[i - 1]);
 		alpha[i - 1] += mobileNgVelocity[i - 1];
 		// FRICTION
-		mobileTangVelocity[i - 1] /= 1.001;
+		mobileTangVelocity[i - 1] /= 1.0004;
 	}
 }
 
 function domLoaded() {
     canv = document.getElementById("pendulum");
     ctx = canv.getContext("2d");
-    
 
     setInterval(move, interval);
 }
